@@ -202,8 +202,18 @@ After the 52 video concepts and editing directions are approved, ask: "Would you
 
 When writing each full script, produce two clearly separated layers of output:
 
-Layer 1 — Teleprompter Script:
-Write the complete spoken words in natural, conversational language suitable for long-form video delivery. Use clear section headings. Write as the practitioner would speak — not as an essay. The script should feel warm, authoritative, and direct. Include a strong opening hook that earns attention in the first ten seconds. Do not include any editing notes inside the teleprompter script itself — keep it completely clean so it can be copied directly into teleprompter software.
+Layer 1 — Teleprompter Script with Inline Editor Cues:
+Write the complete spoken words in natural, conversational language suitable for long-form video delivery. Use clear section headings (e.g. **HOOK**, **TEACHING 1**, **CASE STUDY**, **CALL TO ACTION**). Write as the practitioner would speak — not as an essay. The script should feel warm, authoritative, and direct. Include a strong opening hook that earns attention in the first ten seconds.
+
+Within the teleprompter script, embed inline editor direction lines at key moments using this exact format (always on its own line, between spoken paragraphs — never mid-sentence):
+
+[EDIT: 0:15] Zoom in slowly (1.0x → 1.1x keyframe over 3s). Text overlay: "exact text here" — white bold, bottom third.
+[EDIT: 0:45] Cut to B-roll: specific description of footage. Hold for 4 seconds.
+[EDIT: 2:30] Music: bring down to near-silence for emotional beat.
+[EDIT: 4:00] Pattern interrupt: Dr. [Name] stands/moves to whiteboard. New angle.
+[EDIT: 6:15] Text overlay: "Key stat or quote here" — animate in.
+
+Include at minimum one [EDIT:] cue per major script section. Cover: zooms, B-roll cuts, text overlays (with exact wording), music shifts, chapter title cards, and pattern interrupts. These cues make the script immediately actionable for a video editor without needing to cross-reference a separate document.
 
 Layer 2 — Section Editing Notes:
 After each major section of the teleprompter script, include a clearly labelled editing note block that explains: how that section should be cut, what visuals should appear, what text overlays should be used, how the pacing should feel, and how the editor should maintain viewer retention through that section.

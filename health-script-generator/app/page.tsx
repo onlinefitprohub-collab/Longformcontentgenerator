@@ -13,6 +13,8 @@ import StageProgress from "@/components/StageProgress";
 import ChatWindow from "@/components/ChatWindow";
 import InputBar from "@/components/InputBar";
 import ExportPanel from "@/components/ExportPanel";
+import LibraryPanel from "@/components/LibraryPanel";
+import { parseVideosFromText } from "@/lib/parseVideoContent";
 
 const SESSION_KEY = "hsg_session";
 
@@ -49,6 +51,19 @@ function sessionHasExportContent(session: SessionData): boolean {
       !m.isError &&
       (detectVideoTitlesPresent(m.content) || detectScriptPresent(m.content))
   );
+}
+
+function countVideosInSession(session: SessionData): number {
+  const seen = new Set<number>();
+  for (const msg of session.messages) {
+    if (msg.role !== "assistant" || msg.isError) continue;
+    const parsed = parseVideosFromText(msg.content);
+    if (parsed) parsed.forEach((v) => seen.add(v.number));
+  }
+  if (session.videoTitles) {
+    session.videoTitles.forEach((vt) => seen.add(vt.number));
+  }
+  return seen.size;
 }
 
 function computeShowGenerateScripts(messages: Message[]): boolean {
@@ -163,6 +178,7 @@ export default function Home() {
   const [showExport, setShowExport] = useState(false);
   const [showGenerateScripts, setShowGenerateScripts] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [activeTab, setActiveTab] = useState<"interview" | "library">("interview");
 
   // ── localStorage init ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -376,6 +392,9 @@ export default function Home() {
 
   if (!session) return <LoadingScreen />;
 
+  const videoCount = countVideosInSession(session);
+  const showLibraryTab = showExport || videoCount > 0;
+
   return (
     <>
       {/* Resume modal over the full layout (e.g. fast-path edge case) */}
@@ -445,6 +464,46 @@ export default function Home() {
           <StageProgress currentStageIdx={session.currentStageIdx} />
         </header>
 
+        {/* ── Tab bar ───────────────────────────────────────────────────── */}
+        {showLibraryTab && (
+          <div className="bg-white border-b border-gray-100 flex-shrink-0">
+            <div className="max-w-3xl mx-auto px-4 flex gap-0">
+              <button
+                onClick={() => setActiveTab("interview")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  activeTab === "interview"
+                    ? "border-teal-500 text-teal-600 font-semibold"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                <span>💬</span> Interview
+              </button>
+              <button
+                onClick={() => setActiveTab("library")}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  activeTab === "library"
+                    ? "border-teal-500 text-teal-600 font-semibold"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                <span>📚</span> Library
+                {videoCount > 0 && (
+                  <span className="bg-teal-100 text-teal-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {videoCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Library panel ─────────────────────────────────────────────── */}
+        {activeTab === "library" ? (
+          <div className="flex-1 min-h-0 flex flex-col">
+            <LibraryPanel session={session} />
+          </div>
+        ) : (
+          <>
         {/* ── Chat area — fills remaining height, scrolls internally ──── */}
         <main className="flex-1 min-h-0 flex flex-col">
           <ChatWindow messages={session.messages} loading={isLoading} />
@@ -535,6 +594,8 @@ export default function Home() {
             currentStageIdx={session.currentStageIdx}
           />
         </div>
+          </>
+        )}
 
       </div>
     </>
