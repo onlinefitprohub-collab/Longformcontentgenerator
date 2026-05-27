@@ -175,6 +175,161 @@ function renderScriptContent(content: string): ReactNode {
   );
 }
 
+// ── Editing content renderer — visually structured for editor handoff ─────────
+
+function renderEditingContent(text: string): ReactNode {
+  const lines = text.split("\n");
+  const elements: ReactNode[] = [];
+  let i = 0;
+  let k = 0;
+
+  while (i < lines.length) {
+    const raw = lines[i];
+    const trimmed = raw.trim();
+
+    if (trimmed === "") { i++; continue; }
+
+    // ── ALL-CAPS bold section header: **ASSETS TO SOURCE (Stock Footage)** ──
+    const allCapsBold = trimmed.match(/^\*\*([A-Z][A-Z\s\-()/:&,]+)\*\*\s*:?\s*$/);
+    if (allCapsBold) {
+      elements.push(
+        <div key={k++} className="flex items-center gap-2 mt-6 mb-2 pt-5 border-t border-gray-200">
+          <div className="w-1 h-3.5 bg-teal-500 rounded-full flex-shrink-0" />
+          <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">{allCapsBold[1]}</span>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // ── Section with timestamp: **Hook section (0:00–1:00):** ──
+    const sectionTime = trimmed.match(/^\*\*(.+?)\s*\((\d+:\d+[–\-]\d+:\d+)\)\s*:?\*\*\s*:?\s*$/);
+    if (sectionTime) {
+      elements.push(
+        <div key={k++} className="flex items-center gap-2 mt-4 mb-1">
+          <span className="text-xs font-semibold text-gray-700">{sectionTime[1]}</span>
+          <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded">{sectionTime[2]}</span>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // ── Bold label only: **Step title** or **Step title:** ──
+    const boldLabel = trimmed.match(/^\*\*([^*]+)\*\*\s*:?\s*$/);
+    if (boldLabel) {
+      elements.push(
+        <p key={k++} className="text-xs font-semibold text-gray-600 mt-3 mb-1">{boldLabel[1]}</p>
+      );
+      i++; continue;
+    }
+
+    // ── GRAPHIC REQUIRED / GRAPHIC TO BUILD callout ──
+    if (/^GRAPHIC (REQUIRED|TO BUILD)/i.test(trimmed)) {
+      const body = trimmed.replace(/^GRAPHIC (REQUIRED|TO BUILD)\s*[—\-]\s*/i, "");
+      elements.push(
+        <div key={k++} className="bg-violet-50 border border-violet-200 rounded-lg px-3 py-2.5 my-2">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <svg className="w-3 h-3 text-violet-500 flex-shrink-0" viewBox="0 0 12 12" fill="currentColor">
+              <path d="M1 1h4v4H1zM7 1h4v4H7zM1 7h4v4H1zM7 7h4v4H7z" opacity=".4"/>
+              <path d="M2 2h2v2H2zM8 2h2v2H8zM2 8h2v2H2zM8 8h2v2H8z"/>
+            </svg>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-violet-600">Graphic to Build</span>
+          </div>
+          <p className="text-xs text-violet-900 leading-snug">{parseInline(body)}</p>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // ── Checklist items: ☐ item text ──
+    if (/^[☐☑□✓]/.test(trimmed)) {
+      const items: string[] = [];
+      while (i < lines.length && /^[☐☑□✓]/.test(lines[i].trim())) {
+        items.push(lines[i].trim().slice(1).trim());
+        i++;
+      }
+      elements.push(
+        <div key={k++} className="my-2 space-y-2">
+          {items.map((item, j) => (
+            <div key={j} className="flex items-start gap-2.5 bg-gray-50 rounded-lg px-3 py-2">
+              <div className="flex-shrink-0 w-4 h-4 border-2 border-gray-300 rounded-sm mt-0.5 bg-white" />
+              <span className="text-xs text-gray-700 leading-snug">{parseInline(item)}</span>
+            </div>
+          ))}
+        </div>
+      );
+      continue;
+    }
+
+    // ── Numbered steps: (1) or 1. ──
+    const numStep = trimmed.match(/^(?:\((\d+)\)|(\d+)\.)\s+(.+)/);
+    if (numStep) {
+      const items: Array<{ n: string; body: string }> = [
+        { n: numStep[1] ?? numStep[2], body: numStep[3] },
+      ];
+      i++;
+      while (i < lines.length) {
+        const nm = lines[i].trim().match(/^(?:\((\d+)\)|(\d+)\.)\s+(.+)/);
+        if (nm) { items.push({ n: nm[1] ?? nm[2], body: nm[3] }); i++; }
+        else break;
+      }
+      elements.push(
+        <div key={k++} className="my-2 space-y-2">
+          {items.map((item, j) => (
+            <div key={j} className="flex items-start gap-2.5">
+              <span className="flex-shrink-0 w-5 h-5 bg-gray-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center mt-0.5 leading-none">
+                {item.n}
+              </span>
+              <span className="text-xs text-gray-700 leading-snug">{parseInline(item.body)}</span>
+            </div>
+          ))}
+        </div>
+      );
+      continue;
+    }
+
+    // ── Info prefix callouts: Timing: / Camera note: / Note: / Search: ──
+    const infoPrefix = trimmed.match(/^(Timing|Camera note|Note|Search|Platform|Music note)\s*:\s*/i);
+    if (infoPrefix) {
+      const body = trimmed.slice(infoPrefix[0].length);
+      elements.push(
+        <div key={k++} className="flex items-start gap-2 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2 my-1.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-sky-500 mt-0.5 flex-shrink-0">{infoPrefix[1]}</span>
+          <p className="text-xs text-sky-800 leading-snug">{parseInline(body)}</p>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // ── Bullet list — / * ──
+    if (/^[-*]\s/.test(trimmed)) {
+      const items: string[] = [];
+      while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
+        items.push(lines[i].trim().slice(2));
+        i++;
+      }
+      elements.push(
+        <div key={k++} className="my-1.5 space-y-1">
+          {items.map((item, j) => (
+            <div key={j} className="flex items-start gap-2 text-xs text-gray-700 leading-snug">
+              <span className="flex-shrink-0 w-1 h-1 rounded-full bg-gray-400 mt-1.5" />
+              <span>{parseInline(item)}</span>
+            </div>
+          ))}
+        </div>
+      );
+      continue;
+    }
+
+    // ── Regular paragraph ──
+    elements.push(
+      <p key={k++} className="text-xs text-gray-700 leading-relaxed">{parseInline(raw)}</p>
+    );
+    i++;
+  }
+
+  return <div className="space-y-0.5">{elements}</div>;
+}
+
 // ── Theme colours (cycle through stage accents) ───────────────────────────────
 
 const THEME_COLORS = STAGES.map((s) => s.accent);
@@ -457,6 +612,8 @@ function DetailPanel({ video, colorIdx, onGenerateScript }: DetailPanelProps) {
                 </p>
                 {activeTab === "Script"
                   ? renderScriptContent(s.content)
+                  : activeTab === "Editing"
+                  ? renderEditingContent(s.content)
                   : renderMarkdown(s.content)}
               </div>
             ))}
