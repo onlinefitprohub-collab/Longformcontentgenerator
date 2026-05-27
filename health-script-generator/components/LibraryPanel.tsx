@@ -287,23 +287,55 @@ function renderEditingContent(text: string): ReactNode {
       continue;
     }
 
-    // ── Info prefix callouts: Timing: / Camera note: / Note: / Search: ──
-    const infoPrefix = trimmed.match(/^(Timing|Camera note|Note|Search|Platform|Music note)\s*:\s*/i);
+    // ── Info prefix callouts: Timing: / Pacing: / Camera note: etc ──
+    const infoPrefix = trimmed.match(/^(Timing|Pacing|Camera note|Camera|Note|Search|Platform|Music note|Framing)\s*:\s*/i);
     if (infoPrefix) {
       const body = trimmed.slice(infoPrefix[0].length);
       elements.push(
         <div key={k++} className="flex items-start gap-2 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2 my-1.5">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-sky-500 mt-0.5 flex-shrink-0">{infoPrefix[1]}</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-sky-500 mt-0.5 flex-shrink-0 w-14 leading-tight">{infoPrefix[1]}</span>
           <p className="text-xs text-sky-800 leading-snug">{parseInline(body)}</p>
         </div>
       );
       i++; continue;
     }
 
-    // ── Bullet list — / * ──
-    if (/^[-*]\s/.test(trimmed)) {
+    // ── Em-dash list items: — Label: content  or  — plain item ──
+    if (/^—\s/.test(trimmed)) {
       const items: string[] = [];
-      while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
+      while (i < lines.length && /^—\s/.test(lines[i].trim())) {
+        items.push(lines[i].trim().slice(2).trim());
+        i++;
+      }
+      elements.push(
+        <div key={k++} className="my-2 space-y-1.5">
+          {items.map((item, j) => {
+            // "Label: rest of content" → render label as a badge
+            const lm = item.match(/^([^:]{1,50}):\s+(.+)/);
+            if (lm) {
+              return (
+                <div key={j} className="flex items-start gap-2.5 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                  <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-wide text-gray-400 mt-0.5 w-20 leading-tight">{lm[1]}</span>
+                  <span className="text-xs text-gray-700 leading-snug">{parseInline(lm[2])}</span>
+                </div>
+              );
+            }
+            return (
+              <div key={j} className="flex items-start gap-2 px-1">
+                <span className="flex-shrink-0 text-gray-300 text-sm leading-none mt-0.5">—</span>
+                <span className="text-xs text-gray-700 leading-snug">{parseInline(item)}</span>
+              </div>
+            );
+          })}
+        </div>
+      );
+      continue;
+    }
+
+    // ── Hyphen bullet list: - item ──
+    if (/^-\s/.test(trimmed)) {
+      const items: string[] = [];
+      while (i < lines.length && /^-\s/.test(lines[i].trim())) {
         items.push(lines[i].trim().slice(2));
         i++;
       }
