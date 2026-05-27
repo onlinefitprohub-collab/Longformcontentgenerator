@@ -110,6 +110,7 @@ function renderMarkdown(text: string): ReactNode {
     if (/^\d+\.\s/.test(trimmed)) {
       const items: ReactNode[] = [];
       let lk = 0;
+      const startNum = parseInt(trimmed.match(/^(\d+)\./)?.[1] ?? "1", 10);
       while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
         items.push(
           <li key={lk++}>{parseInline(lines[i].trim().replace(/^\d+\.\s/, ""))}</li>
@@ -117,7 +118,7 @@ function renderMarkdown(text: string): ReactNode {
         i++;
       }
       elements.push(
-        <ol key={bk++} className="list-decimal list-outside pl-4 my-1.5 space-y-0.5 text-sm">
+        <ol key={bk++} start={startNum} className="list-decimal list-outside pl-4 my-1.5 space-y-0.5 text-sm">
           {items}
         </ol>
       );
