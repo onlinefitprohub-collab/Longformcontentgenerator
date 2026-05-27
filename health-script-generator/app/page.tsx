@@ -1,101 +1,381 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { SessionData, Message } from "@/types";
+import { WELCOME_MESSAGE } from "@/lib/prompt";
+import {
+  parseStageFromText,
+  detectVideoTitlesPresent,
+  detectScriptPresent,
+} from "@/lib/parseStage";
+import StageProgress from "@/components/StageProgress";
+import ChatWindow from "@/components/ChatWindow";
+import InputBar from "@/components/InputBar";
+import ExportPanel from "@/components/ExportPanel";
+
+const SESSION_KEY = "hsg_session";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function createFreshSession(): SessionData {
+  const now = Date.now();
+  return {
+    startedAt: now,
+    messages: [
+      {
+        role: "assistant",
+        content: WELCOME_MESSAGE,
+        stageId: 0,
+        timestamp: now,
+      },
+    ],
+    currentStageIdx: 0,
+  };
+}
+
+function saveSession(session: SessionData) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // Quota exceeded or private browsing — fail silently
+  }
+}
+
+function sessionHasExportContent(session: SessionData): boolean {
+  return session.messages.some(
+    (m) =>
+      m.role === "assistant" &&
+      !m.isError &&
+      (detectVideoTitlesPresent(m.content) || detectScriptPresent(m.content))
+  );
+}
+
+// ── Loading screen ────────────────────────────────────────────────────────────
+
+function LoadingScreen() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-[#F5F3EF]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-[#10B981] rounded-full animate-spin" />
+        <p className="text-sm text-gray-400">Loading…</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Resume modal ──────────────────────────────────────────────────────────────
+
+interface ResumeModalProps {
+  pending: SessionData;
+  onResume: () => void;
+  onStartFresh: () => void;
+}
+
+function ResumeModal({ pending, onResume, onStartFresh }: ResumeModalProps) {
+  const msgCount = pending.messages.length;
+  const savedDate = new Date(pending.startedAt).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-200">
+        {/* Icon */}
+        <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] flex items-center justify-center mb-4">
+          <svg
+            className="w-6 h-6 text-[#10B981]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 3" />
+          </svg>
+        </div>
+
+        <h2 className="text-lg font-bold text-[#1A1714] mb-1">
+          Resume your session?
+        </h2>
+        <p className="text-sm text-gray-500 mb-1">
+          You have a previous interview started on{" "}
+          <span className="font-medium text-gray-700">{savedDate}</span>.
+        </p>
+        <p className="text-sm text-gray-400 mb-6">
+          {msgCount} message{msgCount !== 1 ? "s" : ""} ·{" "}
+          Stage {pending.currentStageIdx} of 7
+          {pending.practitionerName
+            ? ` · ${pending.practitionerName}`
+            : ""}
+        </p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onStartFresh}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 active:scale-[0.98] transition-all"
+          >
+            Start Fresh
+          </button>
+          <button
+            onClick={onResume}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#10B981] text-white text-sm font-medium hover:bg-[#059669] active:scale-[0.98] transition-all"
+          >
+            Resume
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [pendingSession, setPendingSession] = useState<SessionData | null>(null);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // ── localStorage init ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as SessionData;
+        // Only offer resume if the session has user messages (i.e. real progress)
+        const hasProgress = parsed.messages.some((m) => m.role === "user");
+        if (hasProgress) {
+          setPendingSession(parsed);
+          setShowResumeModal(true);
+          setInitialized(true);
+          return;
+        }
+      } catch {
+        // Corrupt data — fall through to fresh
+      }
+    }
+    const fresh = createFreshSession();
+    setSession(fresh);
+    saveSession(fresh);
+    setInitialized(true);
+  }, []);
+
+  // ── Session actions ────────────────────────────────────────────────────────
+
+  function handleResume() {
+    if (!pendingSession) return;
+    setSession(pendingSession);
+    setShowExport(sessionHasExportContent(pendingSession));
+    setShowResumeModal(false);
+    setPendingSession(null);
+  }
+
+  function handleStartFresh() {
+    const fresh = createFreshSession();
+    setSession(fresh);
+    saveSession(fresh);
+    setShowExport(false);
+    setInputValue("");
+    setShowResumeModal(false);
+    setPendingSession(null);
+  }
+
+  // ── Message submission with streaming ────────────────────────────────────
+
+  async function handleSend() {
+    if (!session || !inputValue.trim() || isLoading) return;
+
+    const stageId = session.currentStageIdx;
+    const now = Date.now();
+
+    const userMsg: Message = {
+      role: "user",
+      content: inputValue.trim(),
+      stageId,
+      timestamp: now,
+    };
+
+    // Placeholder for the streaming assistant reply
+    const assistantMsg: Message = {
+      role: "assistant",
+      content: "",
+      stageId,
+      timestamp: now + 1,
+    };
+
+    // Snapshot base messages before this turn for final session construction
+    const baseMessages = session.messages;
+
+    setSession((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, userMsg, assistantMsg] } : prev
+    );
+    setInputValue("");
+    setIsLoading(true);
+
+    try {
+      // Anthropic API requires messages to start with a user turn.
+      // The WELCOME_MESSAGE is an assistant-only opener — skip it for the API.
+      const history = [...baseMessages, userMsg].filter((m) => !m.isError);
+      const firstUserIdx = history.findIndex((m) => m.role === "user");
+      const apiMessages = firstUserIdx >= 0 ? history.slice(firstUserIdx) : history;
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: apiMessages, stageIdx: stageId }),
+      });
+
+      if (!res.ok || !res.body) {
+        const errText = await res.text().catch(() => "Unknown error");
+        throw new Error(errText);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let content = "";
+
+      // ── Stream tokens into the placeholder message ─────────────────────
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        content += decoder.decode(value, { stream: true });
+
+        setSession((prev) => {
+          if (!prev) return prev;
+          const msgs = [...prev.messages];
+          msgs[msgs.length - 1] = { ...assistantMsg, content };
+          return { ...prev, messages: msgs };
+        });
+      }
+
+      // ── Post-stream: stage advancement + export detection ──────────────
+      const completedStage = parseStageFromText(content);
+      const newStageIdx =
+        completedStage !== null ? Math.min(completedStage + 1, 7) : stageId;
+
+      if (detectVideoTitlesPresent(content) || detectScriptPresent(content)) {
+        setShowExport(true);
+      }
+
+      const finalSession: SessionData = {
+        ...session,
+        currentStageIdx: newStageIdx,
+        messages: [
+          ...baseMessages,
+          userMsg,
+          { ...assistantMsg, content },
+        ],
+      };
+
+      setSession(finalSession);
+      saveSession(finalSession);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setSession((prev) => {
+        if (!prev) return prev;
+        const msgs = [...prev.messages];
+        msgs[msgs.length - 1] = {
+          ...assistantMsg,
+          content:
+            "Something went wrong. Please check your connection and try again.",
+          isError: true,
+        };
+        return { ...prev, messages: msgs };
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  // Show loading screen until localStorage check completes
+  if (!initialized || (!session && !showResumeModal)) {
+    return <LoadingScreen />;
+  }
+
+  // While the resume modal is deciding, show modal over a minimal bg
+  if (showResumeModal && pendingSession && !session) {
+    return (
+      <div className="h-screen bg-[#F5F3EF]">
+        <ResumeModal
+          pending={pendingSession}
+          onResume={handleResume}
+          onStartFresh={handleStartFresh}
+        />
+      </div>
+    );
+  }
+
+  if (!session) return <LoadingScreen />;
+
+  return (
+    <>
+      {/* Resume modal over the full layout (e.g. fast-path edge case) */}
+      {showResumeModal && pendingSession && (
+        <ResumeModal
+          pending={pendingSession}
+          onResume={handleResume}
+          onStartFresh={handleStartFresh}
+        />
+      )}
+
+      <div className="flex flex-col h-[100dvh] bg-[#F5F3EF]">
+
+        {/* ── Header ────────────────────────────────────────────────────── */}
+        <header className="bg-white shadow-sm flex-shrink-0 z-10">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold text-[#1A1714] leading-tight truncate">
+                Health Content Interview
+              </h1>
+              <p className="text-xs text-gray-400 mt-0.5">
+                52 Long-Form Video Scripts
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Start a new session? Your current progress will be cleared."
+                  )
+                ) {
+                  handleStartFresh();
+                }
+              }}
+              className="flex-shrink-0 text-xs text-gray-400 hover:text-gray-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-50"
+            >
+              New session
+            </button>
+          </div>
+          <StageProgress currentStageIdx={session.currentStageIdx} />
+        </header>
+
+        {/* ── Chat area — fills remaining height, scrolls internally ──── */}
+        <main className="flex-1 min-h-0">
+          <ChatWindow messages={session.messages} loading={isLoading} />
+        </main>
+
+        {/* ── Bottom panel ──────────────────────────────────────────────── */}
+        <div className="flex-shrink-0">
+          <ExportPanel session={session} showExport={showExport} />
+          <InputBar
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSend}
+            disabled={isLoading}
+            currentStageIdx={session.currentStageIdx}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+      </div>
+    </>
   );
 }
