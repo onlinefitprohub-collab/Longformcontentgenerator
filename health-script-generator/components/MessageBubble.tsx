@@ -6,7 +6,6 @@ import { Message } from "@/types";
 import { STAGES } from "@/lib/stages";
 import {
   parseVideosFromText,
-  parseSubsections,
   parseScriptSegments,
 } from "@/lib/parseVideoContent";
 import type { ParsedVideo, ParsedSubsection } from "@/lib/parseVideoContent";
