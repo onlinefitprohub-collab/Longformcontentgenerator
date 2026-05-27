@@ -7,6 +7,7 @@ import {
   parseStageFromText,
   detectVideoTitlesPresent,
   detectScriptPresent,
+  detectEditingDirectionsPresent,
 } from "@/lib/parseStage";
 import StageProgress from "@/components/StageProgress";
 import ChatWindow from "@/components/ChatWindow";
@@ -48,6 +49,13 @@ function sessionHasExportContent(session: SessionData): boolean {
       !m.isError &&
       (detectVideoTitlesPresent(m.content) || detectScriptPresent(m.content))
   );
+}
+
+function computeShowGenerateScripts(messages: Message[]): boolean {
+  const asMsgs = messages.filter((m) => m.role === "assistant" && !m.isError);
+  const hasDirections = asMsgs.some((m) => detectEditingDirectionsPresent(m.content));
+  const hasScripts = asMsgs.some((m) => detectScriptPresent(m.content));
+  return hasDirections && !hasScripts;
 }
 
 // ── Loading screen ────────────────────────────────────────────────────────────
@@ -141,6 +149,7 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showGenerateScripts, setShowGenerateScripts] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   // ── localStorage init ──────────────────────────────────────────────────────
@@ -173,6 +182,7 @@ export default function Home() {
     if (!pendingSession) return;
     setSession(pendingSession);
     setShowExport(sessionHasExportContent(pendingSession));
+    setShowGenerateScripts(computeShowGenerateScripts(pendingSession.messages));
     setShowResumeModal(false);
     setPendingSession(null);
   }
@@ -182,6 +192,7 @@ export default function Home() {
     setSession(fresh);
     saveSession(fresh);
     setShowExport(false);
+    setShowGenerateScripts(false);
     setInputValue("");
     setShowResumeModal(false);
     setPendingSession(null);
@@ -189,15 +200,15 @@ export default function Home() {
 
   // ── Message submission with streaming ────────────────────────────────────
 
-  async function handleSend() {
-    if (!session || !inputValue.trim() || isLoading) return;
+  async function sendMessage(text: string) {
+    if (!session || !text.trim() || isLoading) return;
 
     const stageId = session.currentStageIdx;
     const now = Date.now();
 
     const userMsg: Message = {
       role: "user",
-      content: inputValue.trim(),
+      content: text.trim(),
       stageId,
       timestamp: now,
     };
@@ -216,7 +227,6 @@ export default function Home() {
     setSession((prev) =>
       prev ? { ...prev, messages: [...prev.messages, userMsg, assistantMsg] } : prev
     );
-    setInputValue("");
     setIsLoading(true);
 
     try {
@@ -264,14 +274,17 @@ export default function Home() {
         setShowExport(true);
       }
 
+      const finalMessages = [
+        ...baseMessages,
+        userMsg,
+        { ...assistantMsg, content },
+      ];
+      setShowGenerateScripts(computeShowGenerateScripts(finalMessages));
+
       const finalSession: SessionData = {
         ...session,
         currentStageIdx: newStageIdx,
-        messages: [
-          ...baseMessages,
-          userMsg,
-          { ...assistantMsg, content },
-        ],
+        messages: finalMessages,
       };
 
       setSession(finalSession);
@@ -292,6 +305,19 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function handleSend() {
+    if (!inputValue.trim()) return;
+    const text = inputValue.trim();
+    setInputValue("");
+    await sendMessage(text);
+  }
+
+  async function handleGenerateScripts() {
+    await sendMessage(
+      "Please begin writing the full teleprompter scripts one by one, starting with Video 1."
+    );
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -365,6 +391,38 @@ export default function Home() {
 
         {/* ── Bottom panel ──────────────────────────────────────────────── */}
         <div className="flex-shrink-0">
+
+          {/* Generate scripts banner — appears after editing directions, before teleprompter scripts */}
+          {showGenerateScripts && (
+            <div className="border-t border-gray-200 bg-white px-4 py-3">
+              <div className="max-w-3xl mx-auto flex items-center gap-4">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#84CC1620" }}>
+                  <svg className="w-4 h-4" style={{ color: "#65A30D" }} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#1A1714]">
+                    Step 1 complete — outlines &amp; editing directions ready
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Click to generate the full teleprompter scripts — the actual spoken words for each video.
+                  </p>
+                </div>
+                <button
+                  onClick={handleGenerateScripts}
+                  disabled={isLoading}
+                  className="flex-shrink-0 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 whitespace-nowrap"
+                  style={{ backgroundColor: "#84CC16" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#65A30D"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#84CC16"; }}
+                >
+                  Generate Scripts →
+                </button>
+              </div>
+            </div>
+          )}
+
           <ExportPanel session={session} showExport={showExport} />
           <InputBar
             value={inputValue}

@@ -14,3 +14,7 @@ export function detectVideoTitlesPresent(text: string): boolean {
 export function detectScriptPresent(text: string): boolean {
   return text.includes("TELEPROMPTER SCRIPT") || text.includes("Teleprompter Script");
 }
+
+export function detectEditingDirectionsPresent(text: string): boolean {
+  return /EDITING DIRECTIONS:/i.test(text);
+}
