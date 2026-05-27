@@ -63,9 +63,20 @@ function computeShowGenerateScripts(messages: Message[]): boolean {
 function LoadingScreen() {
   return (
     <div className="flex h-screen items-center justify-center bg-[#F5F3EF]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-gray-200 border-t-[#10B981] rounded-full animate-spin" />
-        <p className="text-sm text-gray-400">Loading…</p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm"
+          style={{ background: "linear-gradient(135deg, #10B981 0%, #0891B2 100%)" }}>
+          <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="1.5" width="12" height="15" rx="2"/>
+            <line x1="6.5" y1="6" x2="11.5" y2="6"/>
+            <line x1="6.5" y1="9" x2="11.5" y2="9"/>
+            <line x1="6.5" y1="12" x2="9.5" y2="12"/>
+          </svg>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-5 h-5 border-2 border-gray-200 border-t-[#10B981] rounded-full animate-spin" />
+          <p className="text-xs text-gray-400 mt-1">Loading…</p>
+        </div>
       </div>
     </div>
   );
@@ -91,9 +102,10 @@ function ResumeModal({ pending, onResume, onStartFresh }: ResumeModalProps) {
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-200">
         {/* Icon */}
-        <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
+          style={{ background: "linear-gradient(135deg, #10B981 0%, #0891B2 100%)" }}>
           <svg
-            className="w-6 h-6 text-[#10B981]"
+            className="w-6 h-6 text-white"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -321,7 +333,9 @@ export default function Home() {
   }
 
   async function handleLoadDemo() {
+    const hasProgress = session?.messages.some((m) => m.role === "user");
     if (
+      hasProgress &&
       !window.confirm(
         "Load the example menopause specialist session? This will replace your current session."
       )
@@ -376,45 +390,106 @@ export default function Home() {
       <div className="flex flex-col h-[100dvh] bg-[#F5F3EF]">
 
         {/* ── Header ────────────────────────────────────────────────────── */}
-        <header className="bg-white shadow-sm flex-shrink-0 z-10">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="text-sm font-bold text-[#1A1714] leading-tight truncate">
-                Health Content Interview
-              </h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                52 Long-Form Video Scripts
-              </p>
+        <header className="bg-white border-b border-gray-100 flex-shrink-0 z-10">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+
+            {/* Brand */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
+                style={{ background: "linear-gradient(135deg, #10B981 0%, #0891B2 100%)" }}>
+                <svg className="w-4.5 h-4.5" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="1.5" width="12" height="15" rx="2"/>
+                  <line x1="6.5" y1="6" x2="11.5" y2="6"/>
+                  <line x1="6.5" y1="9" x2="11.5" y2="9"/>
+                  <line x1="6.5" y1="12" x2="9.5" y2="12"/>
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold text-[#1A1714] leading-tight">
+                  Health Script Generator
+                </h1>
+                <p className="text-[11px] text-gray-400 leading-tight mt-0.5">
+                  AI interview · 52 long-form video scripts
+                  {session.practitionerName && (
+                    <span className="text-gray-600 font-medium"> · {session.practitionerName}</span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+
+            {/* Actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
                 onClick={handleLoadDemo}
-                className="text-xs text-[#3B82F6] hover:text-[#2563EB] font-medium transition-colors px-2.5 py-1.5 rounded-lg hover:bg-blue-50"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#3B82F6] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors border border-blue-100"
               >
-                Load Demo
+                <svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M6 1l1.5 3.5H11L8.5 6.5l1 3.5L6 8l-3.5 2 1-3.5L1 4.5h3.5z"/>
+                </svg>
+                Example
               </button>
+              <div className="w-px h-4 bg-gray-200" />
               <button
                 onClick={() => {
-                  if (
-                    window.confirm(
-                      "Start a new session? Your current progress will be cleared."
-                    )
-                  ) {
+                  if (window.confirm("Start a new session? Your current progress will be cleared.")) {
                     handleStartFresh();
                   }
                 }}
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-50"
               >
-                New session
+                New
               </button>
             </div>
           </div>
+
           <StageProgress currentStageIdx={session.currentStageIdx} />
         </header>
 
         {/* ── Chat area — fills remaining height, scrolls internally ──── */}
-        <main className="flex-1 min-h-0">
+        <main className="flex-1 min-h-0 flex flex-col">
           <ChatWindow messages={session.messages} loading={isLoading} />
+
+          {/* Example card — visible on fresh sessions before the first user reply */}
+          {!session.messages.some((m) => m.role === "user") && !isLoading && (
+            <div className="flex-shrink-0 px-4 pb-3">
+              <div className="max-w-3xl mx-auto">
+                <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                  <div className="flex items-stretch">
+                    {/* Colour bar */}
+                    <div className="w-1 flex-shrink-0" style={{ background: "linear-gradient(180deg, #10B981 0%, #0891B2 100%)" }} />
+                    <div className="flex-1 flex items-center justify-between gap-4 px-4 py-3.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="8" cy="8" r="6.5"/>
+                            <path d="M6 8l1.5 1.5L10.5 6"/>
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#1A1714]">
+                            See a completed example first
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+                            Load a full menopause specialist interview — 52 video titles, editing directions &amp; teleprompter scripts.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleLoadDemo}
+                        className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90 active:scale-95 whitespace-nowrap shadow-sm"
+                        style={{ background: "linear-gradient(135deg, #10B981 0%, #0891B2 100%)" }}
+                      >
+                        Load Example
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 7h10M8 3l4 4-4 4"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* ── Bottom panel ──────────────────────────────────────────────── */}
