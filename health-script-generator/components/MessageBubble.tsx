@@ -4,6 +4,12 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Message } from "@/types";
 import { STAGES } from "@/lib/stages";
+import {
+  parseVideosFromText,
+  parseSubsections,
+  parseScriptSegments,
+} from "@/lib/parseVideoContent";
+import type { ParsedVideo, ParsedSubsection } from "@/lib/parseVideoContent";
 
 // ── Inline markdown: ***bold italic***, **bold**, *italic*, `code` ───────────
 function parseInline(text: string): ReactNode[] {
@@ -141,16 +147,8 @@ function renderMarkdown(text: string): ReactNode {
 
 // ── Video accordion ──────────────────────────────────────────────────────────
 
-interface VideoBlock {
-  number: string;
-  title: string;
-  subsections: SubSection[];
-}
-
-interface SubSection {
-  label: string;
-  content: string;
-}
+// Local alias for legacy VideoBlock shape (MessageBubble uses number as string in badge)
+type VideoBlock = ParsedVideo & { numberStr: string };
 
 function parseVideos(text: string): { preamble: string; videos: VideoBlock[] } | null {
   const lines = text.split("\n");
@@ -166,58 +164,15 @@ function parseVideos(text: string): { preamble: string; videos: VideoBlock[] } |
 
   const preamble = lines.slice(0, videoStarts[0]).join("\n").trim();
 
-  const videos: VideoBlock[] = videoStarts.map((startIdx, i) => {
-    const endIdx = i + 1 < videoStarts.length ? videoStarts[i + 1] : lines.length;
-    const headerLine = lines[startIdx].trim();
+  const parsed = parseVideosFromText(text);
+  if (!parsed) return null;
 
-    const numMatch = headerLine.match(/VIDEO\s+(\d+)/i);
-    const number = numMatch?.[1] ?? String(i + 1);
-
-    const bodyLines = lines.slice(startIdx + 1, endIdx);
-    const body = bodyLines.join("\n").trim();
-
-    // Title may be inline on the VIDEO N: line or on a TITLE: line below
-    let title = headerLine.replace(/^VIDEO\s+\d+\s*:?\s*/i, "").trim().replace(/^\*+|\*+$/g, "").trim();
-    if (!title) {
-      const titleMatch = body.match(/^TITLE:\s*(.+)/im);
-      title = titleMatch?.[1]?.trim().replace(/^\*+|\*+$/g, "").trim() ?? `Video ${number}`;
-    }
-
-    return { number, title, subsections: parseSubsections(body) };
-  });
+  const videos: VideoBlock[] = parsed.map((v) => ({
+    ...v,
+    numberStr: String(v.number),
+  }));
 
   return { preamble, videos };
-}
-
-function parseSubsections(body: string): SubSection[] {
-  const lines = body.split("\n");
-  const starts: Array<{ label: string; idx: number }> = [];
-
-  lines.forEach((line, idx) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.length > 100) return;
-
-    // Match ALL-CAPS label followed by colon, e.g. "EDITING DIRECTIONS:"
-    const allCapsMatch = trimmed.match(/^([A-Z][A-Z\s/\-]+[A-Z])\s*:/);
-    // Match "Layer N — Description" patterns for teleprompter/editing notes
-    const layerMatch = trimmed.match(/^(Layer\s+\d+\s*[—–-].{3,50})/i);
-
-    if (allCapsMatch) {
-      starts.push({ label: allCapsMatch[1].trim(), idx });
-    } else if (layerMatch) {
-      starts.push({ label: layerMatch[1].trim(), idx });
-    }
-  });
-
-  if (starts.length === 0) {
-    return body.trim() ? [{ label: "Content", content: body }] : [];
-  }
-
-  return starts.map(({ label, idx }, i) => {
-    const nextIdx = i + 1 < starts.length ? starts[i + 1].idx : lines.length;
-    const content = lines.slice(idx + 1, nextIdx).join("\n").trim();
-    return { label, content };
-  });
 }
 
 const MINOR_WORDS = new Set(["a", "an", "the", "and", "or", "of", "in", "to", "for"]);
@@ -245,8 +200,47 @@ function ChevronDown({ open }: { open: boolean }) {
   );
 }
 
-function SubsectionPanel({ section }: { section: SubSection }) {
+function EditCueCard({ timing, content }: { timing?: string; content: string }) {
+  return (
+    <div className="bg-teal-50 border-l-4 border-teal-400 rounded-r-lg px-3 py-2 my-1.5 flex items-start gap-2">
+      {timing && (
+        <span className="flex-shrink-0 bg-teal-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5">
+          {timing}
+        </span>
+      )}
+      <span className="text-xs text-teal-800 leading-snug">{content}</span>
+    </div>
+  );
+}
+
+function renderScriptContent(content: string): ReactNode {
+  const segments = parseScriptSegments(content);
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.type === "cue" ? (
+          <EditCueCard key={i} timing={seg.timing} content={seg.content} />
+        ) : (
+          <div key={i}>{renderMarkdown(seg.content)}</div>
+        )
+      )}
+    </>
+  );
+}
+
+const SCRIPT_SECTION_LABELS = new Set([
+  "TELEPROMPTER SCRIPT",
+  "TELEPROMPTER",
+]);
+
+function isScriptSection(label: string): boolean {
+  const upper = label.toUpperCase();
+  return SCRIPT_SECTION_LABELS.has(upper) || /layer\s*1/i.test(label);
+}
+
+function SubsectionPanel({ section }: { section: ParsedSubsection }) {
   const [open, setOpen] = useState(false);
+  const isScript = isScriptSection(section.label);
 
   return (
     <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -261,7 +255,7 @@ function SubsectionPanel({ section }: { section: SubSection }) {
       </button>
       {open && (
         <div className="px-4 py-3 border-t border-gray-100 bg-white">
-          {renderMarkdown(section.content)}
+          {isScript ? renderScriptContent(section.content) : renderMarkdown(section.content)}
         </div>
       )}
     </div>
@@ -281,7 +275,7 @@ function VideoCard({ video, accent }: { video: VideoBlock; accent: string }) {
           className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
           style={{ backgroundColor: accent }}
         >
-          {video.number}
+          {video.numberStr}
         </span>
         <span className="flex-1 text-sm font-semibold text-[#1A1714] leading-snug">
           {video.title}
