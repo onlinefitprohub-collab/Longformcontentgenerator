@@ -211,6 +211,7 @@ export default function Home() {
     setSession(pendingSession);
     setShowExport(sessionHasExportContent(pendingSession));
     setShowGenerateScripts(computeShowGenerateScripts(pendingSession.messages));
+    if (countVideosInSession(pendingSession) > 0) setActiveTab("library");
     setShowResumeModal(false);
     setPendingSession(null);
   }
@@ -365,6 +366,7 @@ export default function Home() {
       setShowExport(sessionHasExportContent(demo));
       setShowGenerateScripts(computeShowGenerateScripts(demo.messages));
       setInputValue("");
+      if (countVideosInSession(demo) > 0) setActiveTab("library");
     } catch {
       alert("Failed to load demo. Please try again.");
     }
@@ -476,7 +478,10 @@ export default function Home() {
                     : "border-transparent text-gray-400 hover:text-gray-600"
                 }`}
               >
-                <span>💬</span> Interview
+                <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 3h10M2 7h10M2 11h5"/>
+                </svg>
+                Interview
               </button>
               <button
                 onClick={() => setActiveTab("library")}
@@ -486,9 +491,14 @@ export default function Home() {
                     : "border-transparent text-gray-400 hover:text-gray-600"
                 }`}
               >
-                <span>📚</span> Library
+                <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1.5" y="2" width="4" height="10" rx="1"/>
+                  <rect x="7" y="2" width="5.5" height="4.5" rx="1"/>
+                  <rect x="7" y="7.5" width="5.5" height="4.5" rx="1"/>
+                </svg>
+                Video Library
                 {videoCount > 0 && (
-                  <span className="bg-teal-100 text-teal-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="bg-teal-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                     {videoCount}
                   </span>
                 )}
@@ -506,6 +516,28 @@ export default function Home() {
           <>
         {/* ── Chat area — fills remaining height, scrolls internally ──── */}
         <main className="flex-1 min-h-0 flex flex-col">
+
+          {/* Library shortcut banner — shown when videos are ready */}
+          {videoCount > 0 && (
+            <div className="flex-shrink-0 border-b border-teal-100 bg-teal-50 px-4 py-2">
+              <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+                <p className="text-xs text-teal-700">
+                  <span className="font-semibold">{videoCount} video{videoCount !== 1 ? "s" : ""} ready</span>
+                  {" — view scripts, editing directions &amp; structure in the Library."}
+                </p>
+                <button
+                  onClick={() => setActiveTab("library")}
+                  className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-100 hover:bg-teal-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  Open Library
+                  <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 6h8M6 2l4 4-4 4"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           <ChatWindow messages={session.messages} loading={isLoading} />
 
           {/* Example card — visible on fresh sessions before the first user reply */}
