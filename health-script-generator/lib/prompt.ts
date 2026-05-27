@@ -222,7 +222,9 @@ Within the teleprompter script, embed inline editor direction lines at key momen
 [EDIT: 4:00] CHAPTER CARD: Full-screen card — dark teal background, white bold text: "exact chapter title here". Hold 1.5 seconds, hard cut to presenter.
 [EDIT: 6:15] GRAPHIC: Animated diagram. [Provide complete build instructions: background, shapes, exact labels, colours, animation style, hold duration.]
 [EDIT: 9:00] LOWER THIRD: Presenter name lower third — Line 1: [Full name], Line 2: [Exact credential]. White text, no background bar. Fade in 0.5s, hold 4s, fade out.
+[EDIT: 10:30] ANIMATION: Kinetic text — the word "TWELVE" slams onto screen (scale 200% → 100% over 0.15s, slight overshoot), holds 0.5s, then the rest of the sentence fades in word by word.
 [EDIT: 12:30] PATTERN INTERRUPT: If second camera angle available, cut to it here. If not, apply a zoom-out (scale 105% → 100% over 1s) for visual variety.
+[EDIT: 14:00] TRANSITION: Whip-pan transition to next section — apply in CapCut using the "Whip" transition preset at 0.3s speed. Use sparingly — maximum twice per video.
 
 Include at minimum one [EDIT:] cue per major script section. Always include a TYPE prefix. Always write cues with enough detail that the editor needs no prior knowledge of the subject — they must be able to execute every instruction by reading only what is written in the cue.
 
@@ -237,6 +239,19 @@ A numbered checklist of every B-roll shot needed. For each shot: ☐ [Platform: 
 
 **GRAPHICS TO BUILD (Canva or After Effects)**
 A numbered checklist of every graphic the editor must create from scratch. For each: ☐ Canvas size (1920×1080). Background colour (hex). All text content (exact words, font size in px, font weight, text colour hex). All shapes, lines, icons (size, colour hex, position). Animation (fade-in / slide-up / count-up / static). How long to hold on screen. How to import into CapCut.
+
+**ANIMATION IDEAS**
+Specific motion and animation suggestions the editor can choose from or combine. Be creative but practical — all suggestions must be achievable in CapCut, Canva, or free After Effects templates. Include ideas such as:
+- Kinetic typography moments (words that slam, bounce, or appear word-by-word for emphasis)
+- Number counter animations (e.g. a stat like "12 years" counts up from 0 in 1.5 seconds)
+- Split-screen reveals (left panel builds first, then right panel slides in)
+- Progress bar or timeline fill animations (a bar fills left-to-right as a list builds)
+- Subtle background motion (very slow drift on a still image using a Ken Burns effect — scale 100% → 108% over the clip duration)
+- Icon pop animations (a small icon scales from 0% to 110% then settles to 100% in 0.3s — use for bullet point emphasis)
+- Text highlight sweep (a coloured bar wipes across behind a key word to highlight it)
+- Glitch or flash transition (a single-frame white flash between two sections for a hard reset of energy)
+- Typewriter effect for lists (each bullet point types itself in, one character at a time)
+Specify for each idea: where in the video it should appear (timestamp), what text or element it applies to, and the intended emotional effect (urgency / warmth / authority / surprise).
 
 **TEXT OVERLAYS & TITLE CARDS (add in CapCut)**
 A numbered checklist: ☐ At [timestamp] — "[exact text]" — [position: lower third / full screen / centred overlay] — [style: white bold / black on white / etc.] — fade in [Xs], hold [Xs], fade out [Xs].
