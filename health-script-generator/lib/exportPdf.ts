@@ -8,12 +8,21 @@ const PAGE_HEIGHT = 792;
 const MARGIN = 72; // 1 inch
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2; // 468
 
+// ── Root cause note ──────────────────────────────────────────────────────────
+// The pageAdded event approach causes infinite recursion:
+//   addPage() → pageAdded → doc.text(footer at y=752) → pdfkit checks
+//   y > maxY() (752 > 720) → addPage() → pageAdded → …
+// Fix: bufferPages:true + post-processing pass (switchToPage + temp zero
+// the bottom margin so placing footer text at y=752 does not trigger another
+// auto-page-break).
+
 export function exportPdf(session: SessionData): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({
       size: "LETTER",
       margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
       autoFirstPage: false,
+      bufferPages: true,   // keep all pages in memory for post-processing
     });
 
     const chunks: Buffer[] = [];
@@ -27,57 +36,15 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
       day: "numeric",
     });
 
-    let pageCount = 0;
-    let headerTitle = "";
+    // Track which section title belongs to which buffered page index
+    const pageTitles: string[] = [];
 
-    // ── Header / footer on every page ────────────────────────────────
-    doc.on("pageAdded", () => {
-      pageCount++;
+    function addPage(title: string) {
+      doc.addPage();
+      pageTitles.push(title);
+    }
 
-      if (headerTitle) {
-        doc
-          .font(FONT_REGULAR)
-          .fontSize(8)
-          .fillColor("#AAAAAA")
-          .text(headerTitle, MARGIN, 24, {
-            width: CONTENT_WIDTH,
-            lineBreak: false,
-            ellipsis: true,
-          });
-
-        doc
-          .moveTo(MARGIN, 36)
-          .lineTo(MARGIN + CONTENT_WIDTH, 36)
-          .strokeColor("#E5E7EB")
-          .lineWidth(0.5)
-          .stroke();
-      }
-
-      // Page number centred in bottom margin
-      doc
-        .font(FONT_REGULAR)
-        .fontSize(8)
-        .fillColor("#AAAAAA")
-        .text(String(pageCount), MARGIN, PAGE_HEIGHT - 40, {
-          width: CONTENT_WIDTH,
-          align: "center",
-          lineBreak: false,
-        });
-
-      // Footer separator
-      doc
-        .moveTo(MARGIN, PAGE_HEIGHT - MARGIN + 8)
-        .lineTo(MARGIN + CONTENT_WIDTH, PAGE_HEIGHT - MARGIN + 8)
-        .strokeColor("#E5E7EB")
-        .lineWidth(0.5)
-        .stroke();
-
-      // Reset cursor to content area
-      doc.y = MARGIN;
-      doc.x = MARGIN;
-    });
-
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────────
     function hr() {
       doc
         .moveTo(MARGIN, doc.y)
@@ -113,9 +80,8 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
         });
     }
 
-    // ── Cover page ───────────────────────────────────────────────────
-    headerTitle = "";
-    doc.addPage();
+    // ── Cover page ───────────────────────────────────────────────────────────
+    addPage(""); // empty title = no header on cover
 
     doc
       .font(FONT_BOLD)
@@ -154,10 +120,9 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
       .fillColor("#9CA3AF")
       .text(`Generated: ${dateStr}`, { width: CONTENT_WIDTH, align: "center" });
 
-    // ── Table of contents (52 video titles) ──────────────────────────
+    // ── Table of contents (52 video titles) ──────────────────────────────────
     if (session.videoTitles && session.videoTitles.length > 0) {
-      headerTitle = "Table of Contents";
-      doc.addPage();
+      addPage("Table of Contents");
 
       doc
         .font(FONT_BOLD)
@@ -195,19 +160,16 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
             .text(`     ${vt.description}`)
             .moveDown(0.2);
         }
-
         doc.moveDown(0.5);
       }
     }
 
-    // ── Individual script sections ────────────────────────────────────
+    // ── Individual script sections ────────────────────────────────────────────
     if (session.scripts && session.scripts.length > 0) {
       for (const script of session.scripts) {
         const scriptLabel = `Video ${script.number}: ${script.title}`;
-        headerTitle = scriptLabel;
-        doc.addPage();
+        addPage(scriptLabel);
 
-        // Title
         doc
           .font(FONT_BOLD)
           .fontSize(20)
@@ -217,7 +179,6 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
 
         hr();
 
-        // Teleprompter script
         doc
           .font(FONT_BOLD)
           .fontSize(13)
@@ -232,7 +193,6 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
           .text(script.teleprompterScript, { lineGap: 3 })
           .moveDown(1.2);
 
-        // Editing directions in shaded block
         doc
           .font(FONT_BOLD)
           .fontSize(13)
@@ -243,7 +203,6 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
         shadedBlock(script.editingDirections);
         doc.moveDown(1.2);
 
-        // Retention notes
         doc
           .font(FONT_BOLD)
           .fontSize(13)
@@ -258,7 +217,6 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
           .text(script.retentionNotes, { lineGap: 2 })
           .moveDown(1.2);
 
-        // Publishing notes
         doc
           .font(FONT_BOLD)
           .fontSize(13)
@@ -274,6 +232,64 @@ export function exportPdf(session: SessionData): Promise<Buffer> {
       }
     }
 
+    // ── Post-processing: add headers and footers to every buffered page ───────
+    // pdfkit auto-page-break fires when y > page.maxY() = height - margins.bottom.
+    // Temporarily zero the bottom margin so placing text at y=PAGE_HEIGHT-40
+    // (= 752, below the normal maxY of 720) does NOT trigger another addPage().
+    const range = doc.bufferedPageRange();
+    for (let i = 0; i < range.count; i++) {
+      doc.switchToPage(range.start + i);
+
+      // Silence auto-page-break for margin-area rendering
+      const origBottom = doc.page.margins.bottom;
+      doc.page.margins.bottom = 0;
+
+      const title = pageTitles[i] ?? "";
+
+      // Header (skip on cover page)
+      if (title) {
+        doc
+          .font(FONT_REGULAR)
+          .fontSize(8)
+          .fillColor("#AAAAAA")
+          .text(title, MARGIN, 24, {
+            width: CONTENT_WIDTH,
+            lineBreak: false,
+            ellipsis: true,
+          });
+
+        doc
+          .moveTo(MARGIN, 36)
+          .lineTo(MARGIN + CONTENT_WIDTH, 36)
+          .strokeColor("#E5E7EB")
+          .lineWidth(0.5)
+          .stroke();
+      }
+
+      // Page number centred in the bottom margin area
+      doc
+        .font(FONT_REGULAR)
+        .fontSize(8)
+        .fillColor("#AAAAAA")
+        .text(String(i + 1), MARGIN, PAGE_HEIGHT - 40, {
+          width: CONTENT_WIDTH,
+          align: "center",
+          lineBreak: false,
+        });
+
+      // Footer separator line
+      doc
+        .moveTo(MARGIN, PAGE_HEIGHT - origBottom + 8)
+        .lineTo(MARGIN + CONTENT_WIDTH, PAGE_HEIGHT - origBottom + 8)
+        .strokeColor("#E5E7EB")
+        .lineWidth(0.5)
+        .stroke();
+
+      // Restore bottom margin
+      doc.page.margins.bottom = origBottom;
+    }
+
+    doc.flushPages();
     doc.end();
   });
 }
