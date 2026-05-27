@@ -349,6 +349,13 @@ export default function Home() {
     );
   }
 
+  async function handleGenerateVideoScript(videoNum: number, title: string) {
+    setActiveTab("interview");
+    await sendMessage(
+      `Please write the full teleprompter script for Video ${videoNum}: "${title}"`
+    );
+  }
+
   async function handleLoadDemo() {
     const hasProgress = session?.messages.some((m) => m.role === "user");
     if (
@@ -510,7 +517,7 @@ export default function Home() {
         {/* ── Library panel ─────────────────────────────────────────────── */}
         {activeTab === "library" ? (
           <div className="flex-1 min-h-0 flex flex-col">
-            <LibraryPanel session={session} />
+            <LibraryPanel session={session} onGenerateScript={handleGenerateVideoScript} />
           </div>
         ) : (
           <>

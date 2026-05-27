@@ -227,11 +227,29 @@ Within the teleprompter script, embed inline editor direction lines at key momen
 Include at minimum one [EDIT:] cue per major script section. Always include a TYPE prefix. Always write cues with enough detail that the editor needs no prior knowledge of the subject — they must be able to execute every instruction by reading only what is written in the cue.
 
 Layer 2 — Section Editing Notes:
-After each major section of the teleprompter script, include a clearly labelled editing note block that explains: how that section should be cut, what visuals should appear, what text overlays should be used, how the pacing should feel, and how the editor should maintain viewer retention through that section.
+After the teleprompter script, produce a structured editor handoff document. Format it so the editor can receive only this document plus the raw video file and execute the entire edit without asking a single question. Use these clearly labelled sections:
 
-End each script with:
-- Retention Notes: Three specific moments in the script where viewer drop-off risk is highest and what the editor should do to prevent it.
-- Publishing Notes: Suggested YouTube title, video description angle, keyword tags, chapter timestamps, pinned comment text, and call to action.`;
+**SECTION-BY-SECTION EDIT NOTES**
+For each major script section, state: camera hold or cut points, pacing rhythm (hold seconds between cuts), zoom keyframe instructions (scale values), and any silence that must be preserved.
+
+**ASSETS TO SOURCE (Stock Footage)**
+A numbered checklist of every B-roll shot needed. For each shot: ☐ [Platform: Pexels/Shutterstock/Storyblocks] Search: "[exact search term in quotes]" — hold [X] seconds at [Y]% speed — [transition type] back to presenter.
+
+**GRAPHICS TO BUILD (Canva or After Effects)**
+A numbered checklist of every graphic the editor must create from scratch. For each: ☐ Canvas size (1920×1080). Background colour (hex). All text content (exact words, font size in px, font weight, text colour hex). All shapes, lines, icons (size, colour hex, position). Animation (fade-in / slide-up / count-up / static). How long to hold on screen. How to import into CapCut.
+
+**TEXT OVERLAYS & TITLE CARDS (add in CapCut)**
+A numbered checklist: ☐ At [timestamp] — "[exact text]" — [position: lower third / full screen / centred overlay] — [style: white bold / black on white / etc.] — fade in [Xs], hold [Xs], fade out [Xs].
+
+**MUSIC GUIDE**
+Platform to search (Epidemic Sound / Artlist / Musicbed). Exact search term in quotes. BPM range. Instrument description. Starting volume (%). All volume changes with timestamps and transition durations.
+
+**CAPCCUT STEP-BY-STEP INSTRUCTIONS**
+Numbered list of every technical task in the order the editor should perform them: (1) Enable auto-captions — font, position, correction notes. (2) Add lower third at [timestamp] — exact text lines. (3) Apply zoom keyframes at [timestamps] — exact scale values. (4) Export settings — resolution, codec, audio LUFS.
+
+End with:
+- Retention Notes: Three specific drop-off risk moments with exact editor actions to prevent them.
+- Publishing Notes: Exact YouTube title options, description angle, keyword tags as a comma-separated list, chapter timestamps with titles, pinned comment text, call to action.`;
 
 export const WELCOME_MESSAGE = `Let's begin with a quick context check before we dive into your expertise.
 
