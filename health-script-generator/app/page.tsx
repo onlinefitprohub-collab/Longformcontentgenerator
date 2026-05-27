@@ -320,6 +320,26 @@ export default function Home() {
     );
   }
 
+  async function handleLoadDemo() {
+    if (
+      !window.confirm(
+        "Load the example menopause specialist session? This will replace your current session."
+      )
+    )
+      return;
+    try {
+      const res = await fetch("/demo-session.json");
+      const demo = (await res.json()) as SessionData;
+      setSession(demo);
+      saveSession(demo);
+      setShowExport(sessionHasExportContent(demo));
+      setShowGenerateScripts(computeShowGenerateScripts(demo.messages));
+      setInputValue("");
+    } catch {
+      alert("Failed to load demo. Please try again.");
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   // Show loading screen until localStorage check completes
@@ -366,20 +386,28 @@ export default function Home() {
                 52 Long-Form Video Scripts
               </p>
             </div>
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "Start a new session? Your current progress will be cleared."
-                  )
-                ) {
-                  handleStartFresh();
-                }
-              }}
-              className="flex-shrink-0 text-xs text-gray-400 hover:text-gray-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-50"
-            >
-              New session
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={handleLoadDemo}
+                className="text-xs text-[#3B82F6] hover:text-[#2563EB] font-medium transition-colors px-2.5 py-1.5 rounded-lg hover:bg-blue-50"
+              >
+                Load Demo
+              </button>
+              <button
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Start a new session? Your current progress will be cleared."
+                    )
+                  ) {
+                    handleStartFresh();
+                  }
+                }}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-50"
+              >
+                New session
+              </button>
+            </div>
           </div>
           <StageProgress currentStageIdx={session.currentStageIdx} />
         </header>
