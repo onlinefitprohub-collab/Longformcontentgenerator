@@ -170,29 +170,37 @@ SUGGESTED LONG-FORM STRUCTURE:
 
 EDITING DIRECTIONS:
 
+IMPORTANT RULE: Write every editing direction as if the video editor has never met the practitioner and knows absolutely nothing about the subject matter. Every instruction must be completely self-contained. Never say "add a relevant graphic" or "use a suitable visual" — instead specify exactly what to create, what text it contains, what colour it is, how it animates, and how long it holds. The editor must be able to execute every instruction without asking a single question.
+
 Opening Hook Edit:
-Describe the first 5 to 20 seconds in detail. Should it open with a hard truth statement, a provocative question, a myth-bust, a case study moment, or a visual contrast? Specify the text overlay, emotional tone, pacing, and whether to use a jump cut or a slow pull-in.
+Describe the first 5–20 seconds with frame-by-frame precision. Specify: the exact words on any opening title card (e.g. full-screen black background, white bold text: "Most women are told it starts at 50. They're wrong."), whether the presenter is on screen from frame one or whether text leads, the camera framing (static wide / slow push-in / tight face shot), whether music is present from the first frame or fades in at a specific moment, and the exact moment of the first cut. State the emotional register the editor should be aiming for (e.g. "quiet authority, not alarm — the editor should resist the urge to use dramatic stings or fast cuts here").
 
 Pacing and Cut Style:
-Should this video be calm and documentary-like, tight and YouTube-retention-focused, conversational and intimate, or structured and lecture-style? Specify when to use jump cuts, when to hold on the presenter, when to zoom in for emphasis, and where pattern interrupts should land.
+Give the editor a cut rhythm they can follow: e.g. "Hold on presenter for 10–20 seconds between cuts during the teaching sections. Allow jump cuts only during list-delivery sequences. Apply a 1.0x → 1.05x slow push-in zoom during emotionally weighted moments — in CapCut, set a keyframe at the clip start (scale 100%) and another at the clip end (scale 105%). Avoid any cuts during the case study section from approximately [timestamp] to [timestamp] — the editor should hold on the presenter and let the story breathe."
 
 B-Roll and Visual Support:
-List specific types of B-roll, diagrams, lifestyle footage, clinic or consultation footage, stock footage, or symbolic visuals that should support each section of the script. Be specific — not just "medical footage" but "close-up of a food journal being written, overhead shot of supplements laid out, split-screen before and after energy levels."
+For every B-roll shot, provide the stock footage search term in quotation marks (e.g. search Pexels, Shutterstock, or Storyblocks for "woman drinking coffee looking tired morning light"), the duration to hold the clip (e.g. 5 seconds), whether it should be slowed (e.g. "play at 70% speed"), and the transition back to presenter (hard cut / 0.5s dissolve). Never use vague descriptions like "supportive lifestyle footage" — give a search term the editor can paste directly into a stock library.
 
 On-Screen Text and Graphics:
-List the exact key phrases, definitions, statistics, framework step names, protocol titles, or hard-truth statements that should appear as text overlays or animated graphics. Include suggested timing for when each should appear.
+For every text overlay or graphic, provide all of the following:
+— The exact text to display (not "key statistic" — the actual words, e.g. "Perimenopause can begin 8–12 years before your last period")
+— Format: full-screen title card / lower-third bar / animated bullet list / split-screen diagram / floating caption
+— Style: font weight (bold / regular / light), text colour (e.g. white), background (e.g. semi-transparent black bar / solid dark teal card / no background), font size guidance (large headline / medium body / small caption)
+— Animation: fade in over 0.5s / slide up from bottom / count-up number effect / no animation (snap in)
+— Timing: the exact spoken word or timestamp at which it appears, and how long it stays on screen before fading or cutting
+For any diagram or animated graphic that cannot be sourced from stock footage, describe every element needed to build it: e.g. "Create a horizontal timeline using Canva or CapCut's text tool. Background: white. A dark gray horizontal line spanning the full width, with five evenly spaced tick marks labelled Age 35, 40, 45, 50, 55. Place a red circle at Age 37 with a label below reading 'Perimenopause begins'. Place a blue circle at Age 51 with a label reading 'Average menopause age (UK)'. Export as a PNG and hold as a static image overlay for 6 seconds."
 
 Chapter Breaks:
-Suggest natural chapter markers with approximate timestamps and chapter titles so the editor can structure the long-form piece clearly for YouTube chapters or course navigation.
+Provide the exact chapter timestamp and title text as the editor should enter it in YouTube Studio — e.g. "0:00 Introduction / 1:05 Why the Timeline Is Wrong / 3:30 The Two Hormones That Drive Everything / 6:00 The 12 Warning Signs / 13:00 Sarah's Story / 16:30 What To Do Now / 18:45 Summary & Next Steps".
 
 Retention Devices:
-Identify three to five specific moments in the video where the editor should introduce a pattern interrupt, tease an upcoming insight, recap a key point with a visual, or use a story beat to re-engage the viewer. Be specific about what happens at each moment.
+For each of the three to five retention devices, specify: the exact timestamp, what appears on screen (e.g. "full-screen title card: bold white text on dark teal — 'Sign #7 Is The One Most Doctors Miss'"), the exact spoken word or frame that triggers it, and how long it holds before the video continues. Be specific enough that the editor does not need to interpret — only execute.
 
 Tone and Music Direction:
-Describe the overall emotional feel of the finished video. Should the music be absent, minimal and ambient, warm and hopeful, clinical and precise, cinematic and weighty, or upbeat and energising? Note where the music should shift in tone if at all.
+Name the emotional register and give a searchable music brief: e.g. "Instrumental only. Calm and slightly cinematic — piano with light strings, no percussion. BPM 60–75. Search Epidemic Sound for 'calm inspirational piano' or Artlist for 'hopeful ambient documentary'. Open at 15% volume under presenter from the first frame. Drop to 0% at the case study section (approximately [timestamp]) — hold silence until the practitioner finishes the story. Bring back to 10% at [timestamp]. Fade to 0% over the final 10 seconds."
 
 CapCut and Editor Notes:
-Practical step-by-step instructions suitable for a CapCut editor or any standard video editing software. Include where to add auto-captions, when to use lower thirds for the presenter's name or credentials, where to add zoom keyframes for emphasis, which moments need a cutaway, where sound effects or audio emphasis should be added, and how to set up the end screen.
+Step-by-step technical instructions written for a CapCut editor (also applicable to Premiere or DaVinci): (1) Enable auto-captions — set font to Bold, white text with black outline, position at the bottom quarter of screen, review transcript and correct errors before export. (2) Lower third — at [timestamp], add a lower-third text for 4 seconds: Line 1: [Presenter full name], Line 2: [Exact credential or title as given in the interview]. White text, no background bar, fade in 0.5s. (3) Zoom keyframes — list every specific moment with exact timestamps where a push-in zoom should be applied and the scale values to use. (4) End screen — final 20 seconds: add two video thumbnail placeholders (centre-left and centre-right), a subscribe button (top-right), all elements fade in simultaneously. (5) Export settings: 1080p minimum, 4K if source allows, MP4 H.264, stereo audio at -14 LUFS.
 
 ---
 
@@ -205,15 +213,18 @@ When writing each full script, produce two clearly separated layers of output:
 Layer 1 — Teleprompter Script with Inline Editor Cues:
 Write the complete spoken words in natural, conversational language suitable for long-form video delivery. Use clear section headings (e.g. **HOOK**, **TEACHING 1**, **CASE STUDY**, **CALL TO ACTION**). Write as the practitioner would speak — not as an essay. The script should feel warm, authoritative, and direct. Include a strong opening hook that earns attention in the first ten seconds.
 
-Within the teleprompter script, embed inline editor direction lines at key moments using this exact format (always on its own line, between spoken paragraphs — never mid-sentence):
+Within the teleprompter script, embed inline editor direction lines at key moments using this exact format — always on its own line, between spoken paragraphs, never mid-sentence. Each cue must begin with a TYPE prefix in capitals:
 
-[EDIT: 0:15] Zoom in slowly (1.0x → 1.1x keyframe over 3s). Text overlay: "exact text here" — white bold, bottom third.
-[EDIT: 0:45] Cut to B-roll: specific description of footage. Hold for 4 seconds.
-[EDIT: 2:30] Music: bring down to near-silence for emotional beat.
-[EDIT: 4:00] Pattern interrupt: Dr. [Name] stands/moves to whiteboard. New angle.
-[EDIT: 6:15] Text overlay: "Key stat or quote here" — animate in.
+[EDIT: 0:08] ZOOM: Slow push-in, keyframe scale 100% → 107% over 4 seconds. Begin as presenter delivers opening statement.
+[EDIT: 0:15] TEXT OVERLAY: Full-screen title card — black background, white bold text centred: "exact title text here". Fade in 0.3s, hold 2.5s, fade out 0.3s.
+[EDIT: 0:45] B-ROLL: Cut to stock footage — search Pexels for "exact search term here" — hold 5 seconds at 85% speed. Hard cut back to presenter.
+[EDIT: 2:30] MUSIC: Reduce from 15% to 0% volume over 3 seconds as presenter begins case study. Hold silence.
+[EDIT: 4:00] CHAPTER CARD: Full-screen card — dark teal background, white bold text: "exact chapter title here". Hold 1.5 seconds, hard cut to presenter.
+[EDIT: 6:15] GRAPHIC: Animated diagram. [Provide complete build instructions: background, shapes, exact labels, colours, animation style, hold duration.]
+[EDIT: 9:00] LOWER THIRD: Presenter name lower third — Line 1: [Full name], Line 2: [Exact credential]. White text, no background bar. Fade in 0.5s, hold 4s, fade out.
+[EDIT: 12:30] PATTERN INTERRUPT: If second camera angle available, cut to it here. If not, apply a zoom-out (scale 105% → 100% over 1s) for visual variety.
 
-Include at minimum one [EDIT:] cue per major script section. Cover: zooms, B-roll cuts, text overlays (with exact wording), music shifts, chapter title cards, and pattern interrupts. These cues make the script immediately actionable for a video editor without needing to cross-reference a separate document.
+Include at minimum one [EDIT:] cue per major script section. Always include a TYPE prefix. Always write cues with enough detail that the editor needs no prior knowledge of the subject — they must be able to execute every instruction by reading only what is written in the cue.
 
 Layer 2 — Section Editing Notes:
 After each major section of the teleprompter script, include a clearly labelled editing note block that explains: how that section should be cut, what visuals should appear, what text overlays should be used, how the pacing should feel, and how the editor should maintain viewer retention through that section.

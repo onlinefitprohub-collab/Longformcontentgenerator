@@ -200,14 +200,27 @@ function ChevronDown({ open }: { open: boolean }) {
 }
 
 function EditCueCard({ timing, content }: { timing?: string; content: string }) {
+  const typeMatch = content.match(/^([A-Z][A-Z /&-]{1,30}):\s*/);
+  const cueType = typeMatch ? typeMatch[1] : "EDITOR CUE";
+  const body = typeMatch ? content.slice(typeMatch[0].length) : content;
+
   return (
-    <div className="bg-teal-50 border-l-4 border-teal-400 rounded-r-lg px-3 py-2 my-1.5 flex items-start gap-2">
-      {timing && (
-        <span className="flex-shrink-0 bg-teal-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5">
-          {timing}
-        </span>
-      )}
-      <span className="text-xs text-teal-800 leading-snug">{content}</span>
+    <div className="border border-dashed border-amber-300 bg-amber-50 rounded-lg px-3 py-2.5 my-2 flex gap-2.5">
+      {/* Scissors icon */}
+      <svg className="flex-shrink-0 w-3.5 h-3.5 text-amber-400 mt-0.5" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM5.06 5.43l5.38 3.19.07.88-5.45 3.23-.19-.98.81-3.24-.62-2.98.19-.1z"/>
+      </svg>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+          <span className="text-[9px] font-bold tracking-widest text-amber-600 uppercase">{cueType}</span>
+          {timing && (
+            <span className="bg-amber-500 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded leading-none">
+              {timing}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-amber-900 leading-snug">{body}</p>
+      </div>
     </div>
   );
 }
