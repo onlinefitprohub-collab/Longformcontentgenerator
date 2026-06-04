@@ -434,7 +434,7 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm font-bold text-[#1A1714] leading-tight">
-                  Health Script Generator
+                  Fitness Script Generator
                 </h1>
                 <p className="text-[11px] text-gray-400 leading-tight mt-0.5">
                   AI interview · 52 long-form video scripts
